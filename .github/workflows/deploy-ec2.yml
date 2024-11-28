@@ -1,0 +1,33 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          hosts: ${{ secrets.ID1 }}
+          username: ec2-user
+          key: ${{ secrets.KEY }}
+          script: |
+            # Limpia el contenido actual del directorio HTML con privilegios de sudo
+            sudo rm -rf /var/www/html/*
+
+            # Descargar el archivo HTML desde GitHub con privilegios de sudo
+            curl -o /tmp/hola.html https://github.com/AlexMPzz/distribuida/blob/main/hola.html
+            sudo mv /tmp/hola.html /var/www/html/hola.html
+
+            # Cambia los permisos para que Apache pueda acceder al archivo
+            sudo chmod 644 /var/www/html/hola.html
+
+            # Reiniciar Apache para aplicar los cambios
+            sudo systemctl restart httpd
